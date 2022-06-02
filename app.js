@@ -5,35 +5,10 @@ const exphbs = require('express-handlebars')
 // 建立基本參數
 const port = 3000
 const app = express()
+let validatedUser = ''
 
 // 使用者名單
-const users = [
-  {
-    firstName: 'Tony',
-    email: 'tony@stark.com',
-    password: 'iamironman'
-  },
-  {
-    firstName: 'Steve',
-    email: 'captain@hotmail.com',
-    password: 'icandothisallday'
-  },
-  {
-    firstName: 'Peter',
-    email: 'peter@parker.com',
-    password: 'enajyram'
-  },
-  {
-    firstName: 'Natasha',
-    email: 'natasha@gamil.com',
-    password: '*parol#@$!'
-  },
-  {
-    firstName: 'Nick',
-    email: 'nick@shield.com',
-    password: 'password'
-  }
-]
+const users = require('./models/users.json')
 
 // 使用express-handlebars為樣板引擎
 app.engine('handlebars', exphbs({ defaultLayout: 'main' }))
@@ -49,12 +24,24 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res) => {
   const { email, password } = req.body
-  console.log(email)
-  console.log(password)
-
-  res.send(`got input`)
+  const validateEmail = users.find(object => object.email === email) || []
+  if (validateEmail.length <= 0) {
+    const errorEmail = '您輸入的電子郵件地址不正確'
+    res.render('index', { errorEmail })
+  } else {
+    if (password !== validateEmail.password) {
+      const errorPassword = '您輸入的密碼不正確'
+      res.render('index', { errorPassword })
+    } else {
+      validatedUser = validateEmail.firstName
+      res.redirect('/login')
+    }
+  }
 })
 
+app.get('/login', (req, res) => {
+  res.render('login', { validatedUser })
+})
 
 // 監聽路由
 app.listen(port, () => {
